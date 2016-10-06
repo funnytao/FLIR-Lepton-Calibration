@@ -60,7 +60,7 @@ uint8_t lepton_frame_packet[VOSPI_FRAME_SIZE];
 static unsigned int lepton_image[80][80];
 char buf[6];
 char reg;
-double temp = 0;
+double temp = 0, ambTemp = 0;
 float calCorrelation;
 float calSlope;
 float calOffset;
@@ -172,9 +172,9 @@ void getAmbTemp() {
 	bcm2835_i2c_begin();
 	bcm2835_i2c_write (&reg, 1);
 	bcm2835_i2c_read_register_rs(&reg,&buf[0],3);
-	temp = (double) (((buf[1]) << 8) + buf[0]);
-	temp = (temp * 0.02)-0.01;
-	temp = temp - 273.15 + OFFSET;
+	ambTemp = (double) (((buf[1]) << 8) + buf[0]);
+	ambTemp = (ambTemp * 0.02)-0.01;
+	ambTemp = ambTemp - 273.15 + OFFSET;
 }
 
 int linreg(int n, const unsigned int x[], const double y[], float* m, float* b, float* r)
@@ -239,7 +239,9 @@ void calibration() {
         avg = calAvg();
         sleep(0.2);
       }
-      printf("%d\n", counter);
+      if (counter % 10 == 0) {
+				printf("%d\n", counter);
+			}
       getTemp();
       old_avg = avg;
       maxTemp = maxTemp < avg ? avg : maxTemp;
@@ -255,6 +257,7 @@ void calibration() {
 }
 
 double rawToTemp(unsigned int rawValue) {
+	calOffset = ambTemp - (calSlope * 8192);
 	return (calSlope * rawValue) + calOffset;
 }
 
@@ -271,10 +274,10 @@ void outputHottest() {
     }
   }
   centerTemp /= pow(2*MATRIX, 2);
-  float diff = temp - rawToTemp(centerTemp);
-  if (abs(diff) > 0.5) {
-    calOffset += diff;
-  }
+  // float diff = temp - rawToTemp(centerTemp);
+  // if (abs(diff) > 0.5) {
+  //   calOffset += diff;
+  // }
   printf("Hottest Point: %f %f %f\n", rawToTemp(hottest), rawToTemp(centerTemp), temp);
   // if (abs(rawToTemp(centerTemp) - temp) > 2) {
   //   calibration();
@@ -295,15 +298,17 @@ int main(int argc, char *argv[])
   int cnt = 0;
   while (1) {
     getTemp();
+		sleep(0.1);
+		getAmbTemp();
     getThermalData();
     printf("%d ", cnt);
     outputHottest();
-    cnt++;
-    if (cnt == 50) {
-      cnt = 0;
-      calibration();
-    }
-    sleep(1);
+    // cnt++;
+    // if (cnt == 50) {
+    //   cnt = 0;
+    //   calibration();
+    // }
+    sleep(0.5);
   }
   // while (1) {
   //   getThermalData();
