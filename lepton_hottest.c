@@ -62,7 +62,7 @@ char buf[6];
 char reg;
 double temp = 0, ambTemp = 0;
 float calCorrelation;
-float calSlope;
+float calSlope = 0.0217;
 float calOffset;
 float calComp;
 unsigned int maxTemp = 0;
@@ -257,13 +257,14 @@ void calibration() {
 }
 
 double rawToTemp(unsigned int rawValue) {
-	calOffset = ambTemp - (calSlope * 8192);
-	return (calSlope * rawValue) + calOffset;
+	//calOffset = ambTemp - (calSlope * 8192);
+	//return (calSlope * rawValue) + calOffset 0.0217;
+	return (0.026 * ((double)rawValue - 8192) + ambTemp);
 }
 
 void outputHottest() {
-  unsigned hottest = 0;
-  unsigned centerTemp = 0;
+  unsigned int hottest = 0;
+  unsigned int centerTemp = 0;
   int row = 0, col = 0;
   for (row = 0; row < 60; row++) {
     for (col = 0; col < 80; col++) {
@@ -278,7 +279,8 @@ void outputHottest() {
   // if (abs(diff) > 0.5) {
   //   calOffset += diff;
   // }
-  printf("Hottest Point: %f %f %f\n", rawToTemp(hottest), rawToTemp(centerTemp), temp);
+  //printf("%d	%f\n", centerTemp - 8192, temp);
+  printf("Hottest Point: %f %f %f %f %d\n", rawToTemp(hottest), (temp-ambTemp)/((double)centerTemp-8192), temp, ambTemp, centerTemp - 8192);
   // if (abs(rawToTemp(centerTemp) - temp) > 2) {
   //   calibration();
   // }
@@ -292,23 +294,23 @@ int main(int argc, char *argv[])
 	// set address
 	bcm2835_i2c_setSlaveAddress(0x5a);
 	printf("\nOk, your device is working!!\n");
-  printf("Calibrating...\n");
-  calibration();
-  printf("Calibrated!\n");
+  //printf("Calibrating...\n");
+  //calibration();
+  //printf("Calibrated!\n");
   int cnt = 0;
   while (1) {
     getTemp();
 		sleep(0.1);
 		getAmbTemp();
     getThermalData();
-    printf("%d ", cnt);
+    //printf("%d ", cnt);
     outputHottest();
     // cnt++;
     // if (cnt == 50) {
     //   cnt = 0;
     //   calibration();
     // }
-    sleep(0.5);
+    sleep(1);
   }
   // while (1) {
   //   getThermalData();
