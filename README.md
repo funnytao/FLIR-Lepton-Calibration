@@ -8,3 +8,5 @@ In order to get the temperature of the lepton, I use the MLX90614 temperature se
 Temperature T = slope * (raw - 8192) + ambTemp
 
 According to Max Ritter's work, the slope he calculated is 0.0217. I recorded the temperature of the difference between raw data and 8192 and the temperature measured by the MLX90614 to apply a polyfit using Matlab and I found the slope I got was 0.026. The result might vary when the environment temperature changes.
+
+To simply calibrate, I also try the DS18B20 sensor since it is cheaper and smaller than the MLX90614. If well calibrated and put in a sealed space, the temperature of the sensor and the camera should be similar and therefore we don't need to know the temperature of an object via the temperature sensor.
